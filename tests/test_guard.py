@@ -34,6 +34,23 @@ def test_only_allow_executes(decision):
     asyncio.run(run())
 
 
+def test_sync_tool_is_awaitable_and_runs_once():
+    async def run():
+        guard = AffixIOAuthorizer("test", agent_id="agent")
+        calls = []
+        guard.decide = lambda *a, **k: _decision("allow")
+
+        @guard.tool
+        def record(value):
+            calls.append(value)
+            return value
+
+        assert await record("one") == "one"
+        assert calls == ["one"]
+
+    asyncio.run(run())
+
+
 def _decision(value):
     async def result(*args, **kwargs):
         return AffixIODecision(value, {})
